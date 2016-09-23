@@ -2,6 +2,7 @@ package com.polidea.rxandroidble.mockrxandroidble
 
 import android.os.Build
 import com.polidea.rxandroidble.RxBleConnection
+import com.polidea.rxandroidble.MockRxBleScannerCompat
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robospock.RoboSpecification
@@ -21,12 +22,13 @@ public class RxBleClientMockTest extends RoboSpecification {
     def PublishSubject characteristicNotificationSubject = PublishSubject.create()
 
     def setup() {
-        rxBleClient = new RxBleClientMock.Builder()
+        rxBleClient = new RxBleClientMockCompat.Builder()
+        .setScanner(new MockRxBleScannerCompat())
                 .addDevice(
                 new RxBleClientMock.DeviceBuilder()
                         .deviceMacAddress("AA:BB:CC:DD:EE:FF")
                         .deviceName("TestDevice")
-                        .scanRecord("ScanRecord".getBytes())
+                        .scanRecord("ScanRecordCompat".getBytes())
                         .rssi(42)
                         .notificationSource(characteristicNotifiedUUID, characteristicNotificationSubject)
                         .addService(
@@ -211,7 +213,8 @@ public class RxBleClientMockTest extends RoboSpecification {
         def testSubscriber = TestSubscriber.create()
         def device = rxBleClient.getBleDevice("AA:BB:CC:DD:EE:FF")
         device.observeConnectionStateChanges().subscribe(testSubscriber);
-        def subscription = device.establishConnection(RuntimeEnvironment.application, false).subscribe {}
+        def subscription = device.establishConnection(RuntimeEnvironment.application, false).subscribe {
+        }
 
         when:
         subscription.unsubscribe()

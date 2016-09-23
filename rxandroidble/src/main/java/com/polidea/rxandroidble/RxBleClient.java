@@ -1,15 +1,33 @@
 package com.polidea.rxandroidble;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.location.LocationManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.polidea.rxandroidble.internal.RxBleDeviceProvider;
 import com.polidea.rxandroidble.internal.RxBleLog;
+import com.polidea.rxandroidble.internal.radio.RxBleRadioImpl;
+import com.polidea.rxandroidble.internal.util.BleConnectionCompat;
+import com.polidea.rxandroidble.internal.util.CheckerLocationPermission;
+import com.polidea.rxandroidble.internal.util.CheckerLocationProvider;
+import com.polidea.rxandroidble.internal.util.LocationServicesStatus;
+import com.polidea.rxandroidble.internal.util.ProviderApplicationTargetSdk;
+import com.polidea.rxandroidble.internal.util.ProviderDeviceSdk;
+import com.polidea.rxandroidble.internal.util.RxBleAdapterWrapper;
+import com.polidea.rxandroidble.internal.util.RxBleScannerCompat;
+import com.polidea.rxandroidble.internal.util.UUIDUtil;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
 import rx.Observable;
+import rx.Scheduler;
+import rx.schedulers.Schedulers;
 
 public abstract class RxBleClient {
 
@@ -20,7 +38,57 @@ public abstract class RxBleClient {
      * @return BLE client instance.
      */
     public static RxBleClient create(@NonNull Context context) {
-        return RxBleClientImpl.getInstance(context);
+        return create(context,false);
+    }
+
+    public static RxBleClient create(@NonNull Context context, boolean useCompat) {
+        final Context applicationContext = context.getApplicationContext();
+        final RxBleScannerCompat rxBleScannerCompat = new RxBleScannerCompat(BluetoothLeScannerCompat.getScanner());
+        final RxBleRadioImpl rxBleRadio = new RxBleRadioImpl();
+        final RxBleAdapterStateObservable adapterStateObservable = new RxBleAdapterStateObservable(applicationContext);
+        final BleConnectionCompat bleConnectionCompat = new BleConnectionCompat(context);
+        final RxBleAdapterWrapper rxBleAdapter = new RxBleAdapterWrapper(BluetoothAdapter.getDefaultAdapter());
+
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        final Scheduler gattCallbacksProcessingScheduler = Schedulers.from(executor);
+        final LocationManager locationManager = (LocationManager) applicationContext.getSystemService(Context.LOCATION_SERVICE);
+        final CheckerLocationPermission checkerLocationPermission = new CheckerLocationPermission(applicationContext);
+        final CheckerLocationProvider checkerLocationProvider = new CheckerLocationProvider(locationManager);
+        final ProviderApplicationTargetSdk providerApplicationTargetSdk = new ProviderApplicationTargetSdk(applicationContext);
+        final ProviderDeviceSdk providerDeviceSdk = new ProviderDeviceSdk();
+        final LocationServicesStatus locationServicesStatus = new LocationServicesStatus(
+            checkerLocationProvider,
+            checkerLocationPermission,
+            providerDeviceSdk,
+            providerApplicationTargetSdk
+        );
+        final RxBleDeviceProvider deviceProvider = new RxBleDeviceProvider(
+            rxBleAdapter,
+            rxBleRadio,
+            bleConnectionCompat,
+            adapterStateObservable,
+            gattCallbacksProcessingScheduler
+        );
+        if (useCompat) {
+            return new RxBleClientImplCompat(
+                    rxBleAdapter,
+                    rxBleScannerCompat,
+                    rxBleRadio,
+                    adapterStateObservable,
+                    new UUIDUtil(),
+                    locationServicesStatus,
+                    deviceProvider
+            );
+
+        } else {
+            return new RxBleClientImpl(
+                    rxBleAdapter,
+                    rxBleRadio,
+                    adapterStateObservable,
+                    new UUIDUtil(),
+                    locationServicesStatus,
+                    deviceProvider);
+        }
     }
 
     /**
@@ -56,4 +124,6 @@ public abstract class RxBleClient {
      * @throws com.polidea.rxandroidble.exceptions.BleScanException emits in case of error starting the scan
      */
     public abstract Observable<RxBleScanResult> scanBleDevices(@Nullable UUID... filterServiceUUIDs);
+
+
 }

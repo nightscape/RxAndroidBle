@@ -111,7 +111,7 @@ public class RxBleClientMock extends RxBleClient {
             if (this.rssi == -1) throw new IllegalStateException("Rssi is required. DeviceBuilder#rssi should be called.");
             if (this.deviceMacAddress == null) throw new IllegalStateException("DeviceMacAddress required."
                     + " DeviceBuilder#deviceMacAddress should be called.");
-            if (this.scanRecord == null) throw new IllegalStateException("ScanRecord required. DeviceBuilder#scanRecord should be called.");
+            if (this.scanRecord == null) throw new IllegalStateException("ScanRecordCompat required. DeviceBuilder#scanRecord should be called.");
             RxBleDeviceMock rxBleDeviceMock = new RxBleDeviceMock(deviceName,
                     deviceMacAddress,
                     scanRecord,
@@ -245,7 +245,7 @@ public class RxBleClientMock extends RxBleClient {
     private Set<RxBleDevice> bondedDevices;
     private Map<String, RxBleDevice> discoverableDevices;
 
-    private RxBleClientMock(Builder builder) {
+    protected RxBleClientMock(Builder builder) {
         discoverableDevices = builder.discoverableDevices;
         bondedDevices = builder.bondedDevices;
     }
