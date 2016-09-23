@@ -1,5 +1,8 @@
 apply from: 'dependencies.gradle'
 apply from: 'checkstyle.gradle'
+apply plugin: 'com.github.dcendents.android-maven'
+group = 'com.github.gryffindor14'
+version = '1.0.2.1'
 
 buildscript {
     repositories {
@@ -12,6 +15,7 @@ buildscript {
         classpath 'me.tatarka:gradle-retrolambda:3.3.1'
         classpath 'me.tatarka.retrolambda.projectlombok:lombok.ast:0.2.3.a2'
         classpath 'org.codehaus.groovy:groovy-android-gradle-plugin:1.1.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 
     configurations.classpath.exclude group: 'com.android.tools.external.lombok'
