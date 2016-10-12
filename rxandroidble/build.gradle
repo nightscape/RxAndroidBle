@@ -49,7 +49,7 @@ dependencies {
     compile rootProject.ext.libs.rxjava
     compile rootProject.ext.libs.rxandroid
     compile rootProject.ext.libs.support_annotations
-    compile 'no.nordicsemi.android.support.v18:scanner:1.0.0'
+    compile rootProject.ext.libs.scanner
     retrolambdaConfig rootProject.ext.libs.retrolambda
 
     // Test dependencies
