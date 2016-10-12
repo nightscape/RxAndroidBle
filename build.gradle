@@ -1,8 +1,5 @@
 apply from: 'dependencies.gradle'
 apply from: 'checkstyle.gradle'
-apply plugin: 'com.github.dcendents.android-maven'
-group = 'com.github.gryffindor14'
-version = '1.0.3'
 
 buildscript {
     repositories {
